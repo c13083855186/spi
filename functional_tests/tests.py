@@ -17,16 +17,16 @@ class NewVisitorTest(LiveServerTestCase):
 
     def wait_for_row_in_list_table(self, row_text):
         start_time = time.time()
-        while True: #(2)
+        while True:
             try:
-                table = self.browser.find_element(By.ID,'id_list_table') #(3)
+                table = self.browser.find_element(By.ID,'id_list_table')
                 rows = table.find_elements(By.TAG_NAME,'tr')
                 self.assertIn(row_text, [row.text for row in rows])
-                return #(4)
-            except (AssertionError, WebDriverException) as e: #(5)
-                if time.time() - start_time >MAX_WAIT: #(6)
-                    raise e #(6)
-                time.sleep(0.5) #(5)
+                return
+            except (AssertionError, WebDriverException) as e:
+                if time.time() - start_time >MAX_WAIT:
+                    raise e
+                time.sleep(0.5)
 
     def test_can_start_a_list_and_retrieve_it_later(self):
         # 张三听说有一个在线待办事项的应用
@@ -71,7 +71,7 @@ class NewVisitorTest(LiveServerTestCase):
         inputbox = self.browser.find_element(By.ID,'id_new_item')
         inputbox.send_keys('Buy flowers')
         inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table('1:But flowers')
+        self.wait_for_row_in_list_table('1:Buy flowers')
 
         # 他注意到清单有个唯一的URL
         zhangsan_list_url = self.browser.current_url
@@ -80,7 +80,7 @@ class NewVisitorTest(LiveServerTestCase):
         # 现在一个新用户王五访问网站
         # 我们使用一个新浏览器会话
         # 确保张三的消息不会从cookie中泄露出来
-        self.browser.queit()
+        self.browser.quit()
         self.browser = webdriver.Chrome()
 
         # 王五访问首页
@@ -92,16 +92,17 @@ class NewVisitorTest(LiveServerTestCase):
 
         # 王五输入一个新待办事项，新建一个清单
         inputbox = self.browser.find_element(By.ID, 'id_new_item')
-        inputbox.send_keys('But milk')
+        inputbox.send_keys('Buy milk')
         inputbox.send_keys(Keys.ENTER)
         self.wait_for_row_in_list_table('1:Buy milk')
 
         # 王五获得了他的唯一URL
         wangwu_list_url = self.browser.current_url
         self.assertRegex(wangwu_list_url, '/lists/.+')
+        self.assertNotEqual(wangwu_list_url, zhangsan_list_url)
 
         # 这个页面还是没有张三的清单
-        page_text = self.browser.find.element(By.TAG_NAME,'body').text
+        page_text = self.browser.find_element(By.TAG_NAME, 'body').text
         self.assertNotIn('Buy flowers', page_text)
         self.assertIn('Buy milk',page_text)
 
